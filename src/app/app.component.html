@@ -1,1 +1,54 @@
-Hello <img src="" />
+<svg viewBox="0 0 1000 800" #svg>
+  <!-- right handle -->
+  <rect
+    [attr.x]="rectangleCoords.right"
+    [attr.y]="rectangleCoords.top"
+    width="1"
+    [attr.height]="rectangleCoords.bottom - rectangleCoords.top"
+    style="cursor: ew-resize"
+    stroke="transparent"
+    stroke-width="10px"
+    (mousedown)="handleMouseDown($event, Direction.E)"
+  />
+  <!-- left handle -->
+  <rect
+    [attr.x]="rectangleCoords.left"
+    [attr.y]="rectangleCoords.top"
+    width="1"
+    [attr.height]="rectangleCoords.bottom - rectangleCoords.top"
+    style="cursor: ew-resize"
+    stroke="transparent"
+    stroke-width="10px"
+    (mousedown)="handleMouseDown($event, Direction.W)"
+  />
+
+  <!-- top handle -->
+  <rect
+    [attr.x]="rectangleCoords.left"
+    [attr.y]="rectangleCoords.top"
+    height="1"
+    [attr.width]="rectangleCoords.right - rectangleCoords.left"
+    style="cursor: ns-resize"
+    stroke="transparent"
+    stroke-width="10px"
+    (mousedown)="handleMouseDown($event, Direction.N)"
+  />
+  <!-- bottom handle -->
+  <rect
+    [attr.x]="rectangleCoords.left"
+    [attr.y]="rectangleCoords.bottom"
+    height="1"
+    [attr.width]="rectangleCoords.right - rectangleCoords.left"
+    style="cursor: ns-resize"
+    stroke="transparent"
+    stroke-width="10px"
+    (mousedown)="handleMouseDown($event, Direction.S)"
+  />
+  <!-- visualize anchor -->
+  <rect
+    [attr.x]="anchorCoords.x"
+    [attr.y]="anchorCoords.y"
+    width="10"
+    height="10"
+  />
+</svg>
