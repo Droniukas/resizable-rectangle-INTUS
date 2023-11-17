@@ -1,12 +1,23 @@
+<!-- viewBox="0 0 1000 950" -->
 <svg
   [ngStyle]="{
     cursor: initialResizeState
-      ? initialResizeState.direction + '-resize'
+      ? initialResizeState.directions.join('') + '-resize'
       : 'default'
   }"
-  viewBox="0 0 1000 800"
+  width="100%"
+  height="100%"
   #svg
 >
+  <rect
+    [attr.x]="rectangleCoords.left"
+    [attr.y]="rectangleCoords.top"
+    [attr.width]="rectangleCoords.right - rectangleCoords.left"
+    [attr.height]="rectangleCoords.bottom - rectangleCoords.top"
+    style="cursor: move"
+    fill="transparent"
+    (mousedown)="handleMoveOnMouseDown($event)"
+  />
   <!-- right handle -->
   <rect
     [attr.x]="rectangleCoords.right"
@@ -16,7 +27,8 @@
     style="cursor: ew-resize"
     stroke="transparent"
     stroke-width="10px"
-    (mousedown)="handleResizeOnMouseDown($event, Direction.E)"
+    fill="grey"
+    (mousedown)="handleResizeOnMouseDown($event, [Direction.E])"
   />
   <!-- left handle -->
   <rect
@@ -27,7 +39,8 @@
     style="cursor: ew-resize"
     stroke="transparent"
     stroke-width="10px"
-    (mousedown)="handleResizeOnMouseDown($event, Direction.W)"
+    fill="grey"
+    (mousedown)="handleResizeOnMouseDown($event, [Direction.W])"
   />
 
   <!-- top handle -->
@@ -39,7 +52,8 @@
     style="cursor: ns-resize"
     stroke="transparent"
     stroke-width="10px"
-    (mousedown)="handleResizeOnMouseDown($event, Direction.N)"
+    fill="grey"
+    (mousedown)="handleResizeOnMouseDown($event, [Direction.N])"
   />
   <!-- bottom handle -->
   <rect
@@ -50,7 +64,8 @@
     style="cursor: ns-resize"
     stroke="transparent"
     stroke-width="10px"
-    (mousedown)="handleResizeOnMouseDown($event, Direction.S)"
+    fill="grey"
+    (mousedown)="handleResizeOnMouseDown($event, [Direction.S])"
   />
   <!-- bottom left handle -->
   <rect
@@ -58,11 +73,15 @@
     [attr.y]="rectangleCoords.bottom - cornerHandleSize / 2"
     [attr.height]="cornerHandleSize"
     [attr.width]="cornerHandleSize"
-    style="cursor: sw-resize"
-    stroke="black"
+    [ngStyle]="{
+      cursor: initialResizeState
+        ? initialResizeState.directions.join('') + '-resize'
+        : 'sw-resize'
+    }"
+    stroke="grey"
     fill="white"
     stroke-width="1px"
-    (mousedown)="handleResizeOnMouseDown($event, Direction.SW)"
+    (mousedown)="handleResizeOnMouseDown($event, [Direction.S, Direction.W])"
     rx="1"
   />
   <!-- bottom right handle -->
@@ -71,11 +90,15 @@
     [attr.y]="rectangleCoords.bottom - cornerHandleSize / 2"
     [attr.height]="cornerHandleSize"
     [attr.width]="cornerHandleSize"
-    style="cursor: se-resize"
-    stroke="black"
+    [ngStyle]="{
+      cursor: initialResizeState
+        ? initialResizeState.directions.join('') + '-resize'
+        : 'se-resize'
+    }"
+    stroke="grey"
     fill="white"
     stroke-width="1px"
-    (mousedown)="handleResizeOnMouseDown($event, Direction.SE)"
+    (mousedown)="handleResizeOnMouseDown($event, [Direction.S, Direction.E])"
     rx="1"
   />
   <!-- top right handle -->
@@ -84,11 +107,15 @@
     [attr.y]="rectangleCoords.top - cornerHandleSize / 2"
     [attr.height]="cornerHandleSize"
     [attr.width]="cornerHandleSize"
-    style="cursor: ne-resize"
-    stroke="black"
+    [ngStyle]="{
+      cursor: initialResizeState
+        ? initialResizeState.directions.join('') + '-resize'
+        : 'ne-resize'
+    }"
+    stroke="grey"
     fill="white"
     stroke-width="1px"
-    (mousedown)="handleResizeOnMouseDown($event, Direction.NE)"
+    (mousedown)="handleResizeOnMouseDown($event, [Direction.N, Direction.E])"
     rx="1"
   />
   <!-- top left handle -->
@@ -97,18 +124,24 @@
     [attr.y]="rectangleCoords.top - cornerHandleSize / 2"
     [attr.height]="cornerHandleSize"
     [attr.width]="cornerHandleSize"
-    style="cursor: nw-resize"
-    stroke="black"
+    [ngStyle]="{
+      cursor: initialResizeState
+        ? initialResizeState.directions.join('') + '-resize'
+        : 'nw-resize'
+    }"
+    stroke="grey"
     fill="white"
     stroke-width="1px"
-    (mousedown)="handleResizeOnMouseDown($event, Direction.NW)"
+    (mousedown)="handleResizeOnMouseDown($event, [Direction.N, Direction.W])"
     rx="1"
   />
-  <!-- visualize anchor -->
-  <rect
-    [attr.x]="anchorCoords.x"
-    [attr.y]="anchorCoords.y"
-    width="10"
-    height="10"
-  />
+
+  <text
+    [attr.x]="rectangleCoords.right + 15"
+    [attr.y]="rectangleCoords.top + 15"
+    fill="grey"
+  >
+    P:
+    {{ rectanglePerimeter }}
+  </text>
 </svg>

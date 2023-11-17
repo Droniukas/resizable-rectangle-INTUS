@@ -6,10 +6,17 @@ body {
   margin: 0;
   padding: 0;
   user-select: none;
-  max-height: 100vh;
+  height: 100vh;
   overflow: hidden;
 }
 
 svg {
   width: 100%;
+}
+
+html,
+body,
+* {
+  margin: 0;
+  padding: 0;
 }

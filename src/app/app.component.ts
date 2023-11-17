@@ -1,22 +1,33 @@
-import { Component, ElementRef, HostListener, ViewChild } from "@angular/core";
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  HostListener,
+  ViewChild,
+} from "@angular/core";
 import { RectangleCoordinates } from "./models/interfaces/RectangleCoordinates";
 import { Direction } from "./models/enums/Direction";
-import { XYCoords } from "./models/interfaces/AnchorCoordinates";
+import { XYCoords } from "./models/interfaces/XYCoords";
 import { AppUtils } from "./utils/AppUtils";
+import { RectangleSide } from "./models/interfaces/RectangleSide";
 
 @Component({
   selector: "app-root",
   templateUrl: "./app.component.html",
   styleUrls: ["./app.component.css"],
 })
-export class AppComponent {
-  title = "resizable-rectangle-fe-INTUS";
+export class AppComponent implements AfterViewInit {
+  ngAfterViewInit(): void {}
   readonly Direction = Direction;
-  anchorCoords: XYCoords = { x: 0, y: 0 };
+  _uncalculatedRectangleCoords: RectangleCoordinates | null = null;
+
   initialResizeState: null | {
-    direction: Direction;
-    rectangleCoords: RectangleCoordinates;
+    directions: Direction[];
+  } = null;
+
+  initialMoveState: null | {
     mouseCoordsInSvgSpace: XYCoords;
+    rectangleCoords: RectangleCoordinates;
   } = null;
 
   rectangleCoords: RectangleCoordinates = {
@@ -26,132 +37,102 @@ export class AppComponent {
     bottom: 400,
   };
 
-  cornerHandleSize = 10;
+  get rectanglePerimeter(): string {
+    return (
+      (this.rectangleCoords.right - this.rectangleCoords.left) * 2 +
+      (this.rectangleCoords.bottom - this.rectangleCoords.top) * 2
+    ).toFixed(2);
+  }
 
-  uncalculatedRectangleCoords: RectangleCoordinates | null = null;
+  cornerHandleSize = 10;
 
   @ViewChild("svg")
   svg!: ElementRef;
 
   @HostListener("window:mousemove", ["$event"])
   handleMouseMove(event: MouseEvent) {
-    if (!this.initialResizeState || !this.uncalculatedRectangleCoords) return;
+    if (!this.initialMoveState && !this.initialResizeState) return;
 
     const mouseCoordsInSvgSpace = AppUtils.getCoordsInSvgSpace(
       event,
       this.svg.nativeElement
     );
-    // const coordsRelativeToAnchor = this.relativeToAnchor(
-    //   AppUtils.getCoordsInSvgSpace(event, this.svg.nativeElement)
-    // );
-    // const initialCoordsRelativeToAnchor = this.relativeToAnchor(
-    //   this.initialState.mouseCoordsInSvgSpace
-    // );
-
-    // let xGrowthRate =
-    //   coordsRelativeToAnchor.x / initialCoordsRelativeToAnchor.x;
-    // let yGrowthRate =
-    //   coordsRelativeToAnchor.y / initialCoordsRelativeToAnchor.y;
-    const initialDir = this.initialResizeState.direction;
 
     if (
-      initialDir === Direction.E ||
-      initialDir === Direction.NE ||
-      initialDir === Direction.SE
+      this.initialResizeState !== null &&
+      this._uncalculatedRectangleCoords !== null
     ) {
-      // this.rectangleCoords.right =
-      //   (this.initialState.rectangleCoords.right - this.anchorCoords.x) *
-      //     xGrowthRate +
-      //   this.anchorCoords.x;
-      this.uncalculatedRectangleCoords.right = mouseCoordsInSvgSpace.x;
-    }
-    if (
-      initialDir === Direction.W ||
-      initialDir === Direction.NW ||
-      initialDir === Direction.SW
-    ) {
-      this.uncalculatedRectangleCoords.left = mouseCoordsInSvgSpace.x;
-    }
-    if (
-      initialDir === Direction.N ||
-      initialDir === Direction.NW ||
-      initialDir === Direction.NE
-    ) {
-      this.uncalculatedRectangleCoords.top = mouseCoordsInSvgSpace.y;
-    }
-    if (
-      initialDir === Direction.S ||
-      initialDir === Direction.SW ||
-      initialDir === Direction.SE
-    ) {
-      this.uncalculatedRectangleCoords.bottom = mouseCoordsInSvgSpace.y;
-    }
-    // console.log("uncalculated", this.uncalculatedRectangleCoords);
-    // console.log(
-    //   "calculated",
-    //   this.calculateBbox(
-    //     [
-    //       this.uncalculatedRectangleCoords.left,
-    //       this.uncalculatedRectangleCoords.right,
-    //     ],
-    //     [
-    //       this.uncalculatedRectangleCoords.top,
-    //       this.uncalculatedRectangleCoords.bottom,
-    //     ]
-    //   )
-    // );
-    this.rectangleCoords = this.calculateBbox(
-      [
-        this.uncalculatedRectangleCoords.left,
-        this.uncalculatedRectangleCoords.right,
-      ],
-      [
-        this.uncalculatedRectangleCoords.top,
-        this.uncalculatedRectangleCoords.bottom,
-      ]
-    );
-  }
+      const initialDirections = this.initialResizeState.directions;
 
-  calculateBbox(xValues: number[], yValues: number[]): RectangleCoordinates {
-    return {
-      left: Math.min(...xValues),
-      right: Math.max(...xValues),
-      top: Math.min(...yValues),
-      bottom: Math.max(...yValues),
-    };
+      if (initialDirections.includes(Direction.E)) {
+        this._uncalculatedRectangleCoords.right = mouseCoordsInSvgSpace.x;
+      }
+      if (initialDirections.includes(Direction.W)) {
+        this._uncalculatedRectangleCoords.left = mouseCoordsInSvgSpace.x;
+      }
+      if (initialDirections.includes(Direction.N)) {
+        this._uncalculatedRectangleCoords.top = mouseCoordsInSvgSpace.y;
+      }
+      if (initialDirections.includes(Direction.S)) {
+        this._uncalculatedRectangleCoords.bottom = mouseCoordsInSvgSpace.y;
+      }
+
+      const rectangleCoords = AppUtils.calculateBox(
+        [
+          this._uncalculatedRectangleCoords.left,
+          this._uncalculatedRectangleCoords.right,
+        ],
+        [
+          this._uncalculatedRectangleCoords.top,
+          this._uncalculatedRectangleCoords.bottom,
+        ]
+      );
+
+      this.rectangleCoords = AppUtils.getRectangleCoordsWithinLimits(
+        rectangleCoords,
+        this.svg.nativeElement
+      );
+    }
+
+    if (this.initialMoveState !== null) {
+      const xDistanceMoved =
+        mouseCoordsInSvgSpace.x - this.initialMoveState.mouseCoordsInSvgSpace.x;
+      const yDistanceMoved =
+        mouseCoordsInSvgSpace.y - this.initialMoveState.mouseCoordsInSvgSpace.y;
+
+      this.rectangleCoords.left =
+        xDistanceMoved + this.initialMoveState.rectangleCoords.left;
+      this.rectangleCoords.right =
+        xDistanceMoved + this.initialMoveState.rectangleCoords.right;
+      this.rectangleCoords.top =
+        yDistanceMoved + this.initialMoveState.rectangleCoords.top;
+      this.rectangleCoords.bottom =
+        yDistanceMoved + this.initialMoveState.rectangleCoords.bottom;
+    }
   }
 
   @HostListener("window:mouseup")
   handleMouseUp() {
     this.initialResizeState = null;
+    this.initialMoveState = null;
   }
 
-  // relativeToAnchor = ({ x, y }: XYCoords): XYCoords => ({
-  //   x: x - this.anchorCoords.x,
-  //   y: y - this.anchorCoords.y,
-  // });
-
-  handleResizeOnMouseDown(event: MouseEvent, direction: Direction) {
-    // set the anchor point and the initialMouseDownState
-    // switch (direction) {
-    //   case Direction.E:
-    //     this.anchorCoords.x = this.rectangleCoords.left;
-    //     break;
-    //   case Direction.W:
-    //     this.anchorCoords.x = this.rectangleCoords.right;
-    //     break;
-    //   // and others
-    // }
-    this.uncalculatedRectangleCoords = {
+  handleResizeOnMouseDown(event: MouseEvent, directions: Direction[]) {
+    this._uncalculatedRectangleCoords = {
       ...this.rectangleCoords,
     };
     this.initialResizeState = {
-      direction: direction,
-      rectangleCoords: { ...this.rectangleCoords },
+      directions: directions,
+    };
+  }
+
+  handleMoveOnMouseDown(event: MouseEvent) {
+    this.initialMoveState = {
       mouseCoordsInSvgSpace: AppUtils.getCoordsInSvgSpace(
         event,
         this.svg.nativeElement
       ),
+      rectangleCoords: { ...this.rectangleCoords },
     };
   }
 }
