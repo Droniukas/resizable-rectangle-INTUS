@@ -1,4 +1,12 @@
-<svg viewBox="0 0 1000 800" #svg>
+<svg
+  [ngStyle]="{
+    cursor: initialResizeState
+      ? initialResizeState.direction + '-resize'
+      : 'default'
+  }"
+  viewBox="0 0 1000 800"
+  #svg
+>
   <!-- right handle -->
   <rect
     [attr.x]="rectangleCoords.right"
@@ -8,7 +16,7 @@
     style="cursor: ew-resize"
     stroke="transparent"
     stroke-width="10px"
-    (mousedown)="handleMouseDown($event, Direction.E)"
+    (mousedown)="handleResizeOnMouseDown($event, Direction.E)"
   />
   <!-- left handle -->
   <rect
@@ -19,7 +27,7 @@
     style="cursor: ew-resize"
     stroke="transparent"
     stroke-width="10px"
-    (mousedown)="handleMouseDown($event, Direction.W)"
+    (mousedown)="handleResizeOnMouseDown($event, Direction.W)"
   />
 
   <!-- top handle -->
@@ -31,7 +39,7 @@
     style="cursor: ns-resize"
     stroke="transparent"
     stroke-width="10px"
-    (mousedown)="handleMouseDown($event, Direction.N)"
+    (mousedown)="handleResizeOnMouseDown($event, Direction.N)"
   />
   <!-- bottom handle -->
   <rect
@@ -42,7 +50,59 @@
     style="cursor: ns-resize"
     stroke="transparent"
     stroke-width="10px"
-    (mousedown)="handleMouseDown($event, Direction.S)"
+    (mousedown)="handleResizeOnMouseDown($event, Direction.S)"
+  />
+  <!-- bottom left handle -->
+  <rect
+    [attr.x]="rectangleCoords.left - cornerHandleSize / 2"
+    [attr.y]="rectangleCoords.bottom - cornerHandleSize / 2"
+    [attr.height]="cornerHandleSize"
+    [attr.width]="cornerHandleSize"
+    style="cursor: sw-resize"
+    stroke="black"
+    fill="white"
+    stroke-width="1px"
+    (mousedown)="handleResizeOnMouseDown($event, Direction.SW)"
+    rx="1"
+  />
+  <!-- bottom right handle -->
+  <rect
+    [attr.x]="rectangleCoords.right - cornerHandleSize / 2"
+    [attr.y]="rectangleCoords.bottom - cornerHandleSize / 2"
+    [attr.height]="cornerHandleSize"
+    [attr.width]="cornerHandleSize"
+    style="cursor: se-resize"
+    stroke="black"
+    fill="white"
+    stroke-width="1px"
+    (mousedown)="handleResizeOnMouseDown($event, Direction.SE)"
+    rx="1"
+  />
+  <!-- top right handle -->
+  <rect
+    [attr.x]="rectangleCoords.right - cornerHandleSize / 2"
+    [attr.y]="rectangleCoords.top - cornerHandleSize / 2"
+    [attr.height]="cornerHandleSize"
+    [attr.width]="cornerHandleSize"
+    style="cursor: ne-resize"
+    stroke="black"
+    fill="white"
+    stroke-width="1px"
+    (mousedown)="handleResizeOnMouseDown($event, Direction.NE)"
+    rx="1"
+  />
+  <!-- top left handle -->
+  <rect
+    [attr.x]="rectangleCoords.left - cornerHandleSize / 2"
+    [attr.y]="rectangleCoords.top - cornerHandleSize / 2"
+    [attr.height]="cornerHandleSize"
+    [attr.width]="cornerHandleSize"
+    style="cursor: nw-resize"
+    stroke="black"
+    fill="white"
+    stroke-width="1px"
+    (mousedown)="handleResizeOnMouseDown($event, Direction.NW)"
+    rx="1"
   />
   <!-- visualize anchor -->
   <rect
