@@ -1,0 +1,20 @@
+.handle {
+  fill: grey;
+  stroke: transparent;
+  stroke-width: 10px;
+}
+
+.handle-horizontal {
+  cursor: ew-resize;
+}
+
+.handle-vertical {
+  cursor: ns-resize;
+}
+
+.corner-handle {
+  stroke: grey;
+  fill: white;
+  stroke-width: 1px;
+  rx: 1;
+}

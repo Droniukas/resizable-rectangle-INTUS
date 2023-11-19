@@ -1,6 +1,6 @@
-import { XYCoords } from "../models/interfaces/XYCoords";
+import { XYCoords } from "../../../models/interfaces/XYCoords";
 
-export class AppUtils {
+export class ShapesUtils {
   static getCoordsInSvgSpace(event: MouseEvent, svg: SVGSVGElement): XYCoords {
     const pt = svg.createSVGPoint();
     pt.x = event.clientX;

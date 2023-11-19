@@ -13,4 +13,8 @@ export class RectangleService {
   getRectangleCoordinates(): Observable<RectangleCoordinates> {
     return this.http.get<RectangleCoordinates>(this.RECTANGLE_API);
   }
+
+  updateRectangleCoordinates(rectangleCoords: RectangleCoordinates) {
+    this.http.put(this.RECTANGLE_API, rectangleCoords).subscribe();
+  }
 }

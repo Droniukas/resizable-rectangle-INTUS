@@ -1,10 +1,17 @@
-import { Component, HostListener, Input, Renderer2 } from "@angular/core";
+import {
+  Component,
+  EventEmitter,
+  HostListener,
+  Input,
+  Output,
+  Renderer2,
+} from "@angular/core";
 import { Direction } from "src/app/models/enums/Direction";
 import { RectangleCoordinates } from "src/app/models/interfaces/RectangleCoordinates";
 import { XYCoords } from "src/app/models/interfaces/XYCoords";
 
 @Component({
-  selector: "g[app-rectangle]",
+  selector: "g[rectangle]",
   templateUrl: "./rectangle.component.html",
   styleUrls: ["./rectangle.component.css"],
 })
@@ -17,10 +24,14 @@ export class RectangleComponent {
   @Input({ required: true })
   rectangleCoords!: RectangleCoordinates;
 
+  @Output()
+  saveRectangleCoords: EventEmitter<RectangleCoordinates> = new EventEmitter();
+
   constructor(private renderer: Renderer2) {}
 
   windowMouseMoveListener: (() => void) | null = null;
   windowMouseResizeListener: (() => void) | null = null;
+  windowMouseUpListener: (() => void) | null = null;
 
   cornerHandleSize = 10;
 
@@ -99,6 +110,9 @@ export class RectangleComponent {
 
   @HostListener("window:mouseup")
   handleMouseUp() {
+    if (this.initialResizeState === null && this.initialMoveState === null)
+      return;
+    this.saveRectangleCoords.emit(this.rectangleCoords);
     this.initialResizeState = null;
     this.initialMoveState = null;
     if (this.windowMouseMoveListener) this.windowMouseMoveListener();

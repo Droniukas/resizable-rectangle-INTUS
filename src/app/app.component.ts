@@ -9,7 +9,7 @@ import {
 import { RectangleCoordinates } from "./models/interfaces/RectangleCoordinates";
 import { Direction } from "./models/enums/Direction";
 import { XYCoords } from "./models/interfaces/XYCoords";
-import { AppUtils } from "./utils/AppUtils";
+import { ShapesUtils } from "./components/shapes/utils/ShapesUtils";
 import { RectangleService } from "./services/Rectangle.service";
 
 @Component({
@@ -17,28 +17,4 @@ import { RectangleService } from "./services/Rectangle.service";
   templateUrl: "./app.component.html",
   styleUrls: ["./app.component.css"],
 })
-export class AppComponent implements OnInit, AfterViewInit {
-  rectangleCoords!: RectangleCoordinates;
-
-  @ViewChild("svg")
-  svg!: ElementRef;
-
-  getCoordsInSvgSpace = (event: MouseEvent): XYCoords => {
-    return AppUtils.getCoordsInSvgSpace(event, this.svg.nativeElement);
-  };
-
-  constructor(private rectangleService: RectangleService) {}
-
-  ngOnInit(): void {
-    this.rectangleService
-      .getRectangleCoordinates()
-      .subscribe((rectangleCoords: RectangleCoordinates) => {
-        console.log(rectangleCoords);
-        this.rectangleCoords = rectangleCoords;
-      });
-  }
-
-  ngAfterViewInit(): void {
-    console.log(this);
-  }
-}
+export class AppComponent {}
