@@ -1,16 +1,7 @@
-import {
-  Component,
-  ElementRef,
-  EventEmitter,
-  HostListener,
-  Input,
-  OnInit,
-  Output,
-} from "@angular/core";
+import { Component, HostListener, Input, Renderer2 } from "@angular/core";
 import { Direction } from "src/app/models/enums/Direction";
 import { RectangleCoordinates } from "src/app/models/interfaces/RectangleCoordinates";
 import { XYCoords } from "src/app/models/interfaces/XYCoords";
-import { AppUtils } from "src/app/utils/AppUtils";
 
 @Component({
   selector: "g[app-rectangle]",
@@ -18,18 +9,20 @@ import { AppUtils } from "src/app/utils/AppUtils";
   styleUrls: ["./rectangle.component.css"],
 })
 export class RectangleComponent {
+  readonly Direction = Direction;
+
   @Input({ required: true })
   getCoordsInSvgSpace!: (event: MouseEvent) => XYCoords;
 
   @Input({ required: true })
   rectangleCoords!: RectangleCoordinates;
 
-  @Input({ required: true })
-  parentSvg!: HTMLElement | SVGSVGElement;
+  constructor(private renderer: Renderer2) {}
+
+  windowMouseMoveListener: (() => void) | null = null;
+  windowMouseResizeListener: (() => void) | null = null;
 
   cornerHandleSize = 10;
-
-  readonly Direction = Direction;
 
   _uncalculatedRectangleCoords: RectangleCoordinates | null = null;
 
@@ -49,11 +42,14 @@ export class RectangleComponent {
     );
   }
 
-  calculateDirection(
-    initialDirections: Direction[],
-    mouseCoordsInSvgSpace: XYCoords
-  ) {
-    if (this._uncalculatedRectangleCoords === null) return;
+  handleResizeOnMouseMove(event: MouseEvent) {
+    if (!this.initialResizeState || this._uncalculatedRectangleCoords === null)
+      return;
+
+    const mouseCoordsInSvgSpace = this.getCoordsInSvgSpace(event);
+
+    const initialDirections = this.initialResizeState.directions;
+
     if (initialDirections.includes(Direction.E)) {
       this._uncalculatedRectangleCoords.right = mouseCoordsInSvgSpace.x;
     }
@@ -66,63 +62,47 @@ export class RectangleComponent {
     if (initialDirections.includes(Direction.S)) {
       this._uncalculatedRectangleCoords.bottom = mouseCoordsInSvgSpace.y;
     }
+
+    const xValues = [
+      this._uncalculatedRectangleCoords.left,
+      this._uncalculatedRectangleCoords.right,
+    ];
+    const yValues = [
+      this._uncalculatedRectangleCoords.top,
+      this._uncalculatedRectangleCoords.bottom,
+    ];
+
+    this.rectangleCoords.left = Math.min(...xValues);
+    this.rectangleCoords.right = Math.max(...xValues);
+    this.rectangleCoords.top = Math.min(...yValues);
+    this.rectangleCoords.bottom = Math.max(...yValues);
   }
 
-  @HostListener("window:mousemove", ["$event"])
-  handleMouseMove(event: MouseEvent) {
-    if (!this.initialMoveState && !this.initialResizeState) return;
-
+  handleMoveOnMouseMove(event: MouseEvent) {
+    if (this.initialMoveState === null) return;
     const mouseCoordsInSvgSpace = this.getCoordsInSvgSpace(event);
 
-    // const mouseCoordsInSvgSpace = AppUtils.getCoordsInSvgSpace(
-    //   event,
-    //   this.parentSvg as SVGSVGElement
-    // );
+    const xDistanceMoved =
+      mouseCoordsInSvgSpace.x - this.initialMoveState.mouseCoordsInSvgSpace.x;
+    const yDistanceMoved =
+      mouseCoordsInSvgSpace.y - this.initialMoveState.mouseCoordsInSvgSpace.y;
 
-    if (
-      this.initialResizeState !== null &&
-      this._uncalculatedRectangleCoords !== null
-    ) {
-      const initialDirections = this.initialResizeState.directions;
-
-      this.calculateDirection(initialDirections, mouseCoordsInSvgSpace);
-
-      const xValues = [
-        this._uncalculatedRectangleCoords.left,
-        this._uncalculatedRectangleCoords.right,
-      ];
-      const yValues = [
-        this._uncalculatedRectangleCoords.top,
-        this._uncalculatedRectangleCoords.bottom,
-      ];
-
-      this.rectangleCoords.left = Math.min(...xValues);
-      this.rectangleCoords.right = Math.max(...xValues);
-      this.rectangleCoords.top = Math.min(...yValues);
-      this.rectangleCoords.bottom = Math.max(...yValues);
-    }
-
-    if (this.initialMoveState !== null) {
-      const xDistanceMoved =
-        mouseCoordsInSvgSpace.x - this.initialMoveState.mouseCoordsInSvgSpace.x;
-      const yDistanceMoved =
-        mouseCoordsInSvgSpace.y - this.initialMoveState.mouseCoordsInSvgSpace.y;
-
-      this.rectangleCoords.left =
-        xDistanceMoved + this.initialMoveState.rectangleCoords.left;
-      this.rectangleCoords.right =
-        xDistanceMoved + this.initialMoveState.rectangleCoords.right;
-      this.rectangleCoords.top =
-        yDistanceMoved + this.initialMoveState.rectangleCoords.top;
-      this.rectangleCoords.bottom =
-        yDistanceMoved + this.initialMoveState.rectangleCoords.bottom;
-    }
+    this.rectangleCoords.left =
+      xDistanceMoved + this.initialMoveState.rectangleCoords.left;
+    this.rectangleCoords.right =
+      xDistanceMoved + this.initialMoveState.rectangleCoords.right;
+    this.rectangleCoords.top =
+      yDistanceMoved + this.initialMoveState.rectangleCoords.top;
+    this.rectangleCoords.bottom =
+      yDistanceMoved + this.initialMoveState.rectangleCoords.bottom;
   }
 
   @HostListener("window:mouseup")
   handleMouseUp() {
     this.initialResizeState = null;
     this.initialMoveState = null;
+    if (this.windowMouseMoveListener) this.windowMouseMoveListener();
+    if (this.windowMouseResizeListener) this.windowMouseResizeListener();
   }
 
   handleResizeOnMouseDown(directions: Direction[]) {
@@ -132,17 +112,22 @@ export class RectangleComponent {
     this.initialResizeState = {
       directions: directions,
     };
+    this.windowMouseResizeListener = this.renderer.listen(
+      "window",
+      "mousemove",
+      (event) => this.handleResizeOnMouseMove(event)
+    );
   }
 
   handleMoveOnMouseDown(event: MouseEvent) {
     this.initialMoveState = {
       mouseCoordsInSvgSpace: this.getCoordsInSvgSpace(event),
-      // mouseCoordsInSvgSpace: AppUtils.getCoordsInSvgSpace(
-      //   event,
-      //   this.parentSvg as SVGSVGElement
-      // ),
-
       rectangleCoords: { ...this.rectangleCoords },
     };
+    this.windowMouseMoveListener = this.renderer.listen(
+      "window",
+      "mousemove",
+      (event) => this.handleMoveOnMouseMove(event)
+    );
   }
 }

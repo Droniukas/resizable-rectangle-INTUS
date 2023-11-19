@@ -20,13 +20,12 @@ import { RectangleService } from "./services/Rectangle.service";
 export class AppComponent implements OnInit, AfterViewInit {
   rectangleCoords!: RectangleCoordinates;
 
-  @ViewChild("svg", { static: false })
+  @ViewChild("svg")
   svg!: ElementRef;
 
-  getCoordsInSvgSpace(event: MouseEvent): XYCoords {
-    console.log(this);
+  getCoordsInSvgSpace = (event: MouseEvent): XYCoords => {
     return AppUtils.getCoordsInSvgSpace(event, this.svg.nativeElement);
-  }
+  };
 
   constructor(private rectangleService: RectangleService) {}
 
