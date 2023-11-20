@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\buildMultiTargeting\Resizable-rectangle-be-INTUS.props" />
-</Project>
