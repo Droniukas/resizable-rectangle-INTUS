@@ -10,14 +10,7 @@ import { ShapesUtils } from "src/app/components/shapes/utils/ShapesUtils";
   styleUrls: ["./shapes.component.css"],
 })
 export class ShapesComponent implements OnInit {
-  rectangleCoords: RectangleCoordinates | null = null;
-
-  rectangleCoords2: RectangleCoordinates = {
-    right: 100,
-    left: 100,
-    bottom: 100,
-    top: 100,
-  };
+  initialRectangleCoords: RectangleCoordinates | null = null;
 
   @ViewChild("svg")
   svg!: ElementRef;
@@ -36,7 +29,7 @@ export class ShapesComponent implements OnInit {
     this.rectangleService
       .getRectangleCoordinates()
       .subscribe((rectangleCoords: RectangleCoordinates) => {
-        this.rectangleCoords = rectangleCoords;
+        this.initialRectangleCoords = rectangleCoords;
       });
   }
 }

@@ -3,25 +3,27 @@ import {
   EventEmitter,
   HostListener,
   Input,
+  OnInit,
   Output,
   Renderer2,
 } from "@angular/core";
 import { Direction } from "src/app/models/enums/Direction";
 import { RectangleCoordinates } from "src/app/models/interfaces/RectangleCoordinates";
 import { XYCoords } from "src/app/models/interfaces/XYCoords";
+import { RectangleUtils } from "./utils/RectangleUtils";
 
 @Component({
   selector: "g[rectangle]",
   templateUrl: "./rectangle.component.html",
   styleUrls: ["./rectangle.component.css"],
 })
-export class RectangleComponent {
+export class RectangleComponent implements OnInit {
   readonly Direction = Direction;
 
   @Input({ required: true })
   getCoordsInSvgSpace!: (event: MouseEvent) => XYCoords;
 
-  @Input({ required: true })
+  @Input({ required: true, alias: "initialRectangleCoords" })
   rectangleCoords!: RectangleCoordinates;
 
   @Output()
@@ -29,16 +31,23 @@ export class RectangleComponent {
 
   constructor(private renderer: Renderer2) {}
 
+  ngOnInit(): void {
+    this.rectanglePerimeter = RectangleUtils.calculateRectanglePerimeter(
+      this.rectangleCoords
+    );
+  }
+
   windowMouseMoveListener: (() => void) | null = null;
   windowMouseResizeListener: (() => void) | null = null;
   windowMouseUpListener: (() => void) | null = null;
 
   cornerHandleSize = 10;
 
-  _uncalculatedRectangleCoords: RectangleCoordinates | null = null;
+  rectanglePerimeter!: number;
 
   initialResizeState: null | {
     directions: Direction[];
+    rectangleCoords: RectangleCoordinates;
   } = null;
 
   initialMoveState: null | {
@@ -46,47 +55,38 @@ export class RectangleComponent {
     rectangleCoords: RectangleCoordinates;
   } = null;
 
-  get rectanglePerimeter(): number {
-    return (
-      (this.rectangleCoords.right - this.rectangleCoords.left) * 2 +
-      (this.rectangleCoords.bottom - this.rectangleCoords.top) * 2
-    );
-  }
-
   handleResizeOnMouseMove(event: MouseEvent) {
-    if (!this.initialResizeState || this._uncalculatedRectangleCoords === null)
-      return;
+    if (!this.initialResizeState) return;
 
     const mouseCoordsInSvgSpace = this.getCoordsInSvgSpace(event);
 
+    const rectangleCoords = this.initialResizeState.rectangleCoords;
     const initialDirections = this.initialResizeState.directions;
 
     if (initialDirections.includes(Direction.E)) {
-      this._uncalculatedRectangleCoords.right = mouseCoordsInSvgSpace.x;
+      rectangleCoords.right = mouseCoordsInSvgSpace.x;
     }
     if (initialDirections.includes(Direction.W)) {
-      this._uncalculatedRectangleCoords.left = mouseCoordsInSvgSpace.x;
+      rectangleCoords.left = mouseCoordsInSvgSpace.x;
     }
     if (initialDirections.includes(Direction.N)) {
-      this._uncalculatedRectangleCoords.top = mouseCoordsInSvgSpace.y;
+      rectangleCoords.top = mouseCoordsInSvgSpace.y;
     }
     if (initialDirections.includes(Direction.S)) {
-      this._uncalculatedRectangleCoords.bottom = mouseCoordsInSvgSpace.y;
+      rectangleCoords.bottom = mouseCoordsInSvgSpace.y;
     }
 
-    const xValues = [
-      this._uncalculatedRectangleCoords.left,
-      this._uncalculatedRectangleCoords.right,
-    ];
-    const yValues = [
-      this._uncalculatedRectangleCoords.top,
-      this._uncalculatedRectangleCoords.bottom,
-    ];
+    const xValues = [rectangleCoords.left, rectangleCoords.right];
+    const yValues = [rectangleCoords.top, rectangleCoords.bottom];
 
     this.rectangleCoords.left = Math.min(...xValues);
     this.rectangleCoords.right = Math.max(...xValues);
     this.rectangleCoords.top = Math.min(...yValues);
     this.rectangleCoords.bottom = Math.max(...yValues);
+
+    this.rectanglePerimeter = RectangleUtils.calculateRectanglePerimeter(
+      this.rectangleCoords
+    );
   }
 
   handleMoveOnMouseMove(event: MouseEvent) {
@@ -120,11 +120,9 @@ export class RectangleComponent {
   }
 
   handleResizeOnMouseDown(directions: Direction[]) {
-    this._uncalculatedRectangleCoords = {
-      ...this.rectangleCoords,
-    };
     this.initialResizeState = {
       directions: directions,
+      rectangleCoords: { ...this.rectangleCoords },
     };
     this.windowMouseResizeListener = this.renderer.listen(
       "window",
